@@ -1,4 +1,5 @@
 const User = require("../models/User");
+const ToDo = require('../models/toDoList');
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
 
@@ -37,7 +38,7 @@ async function loginUser(req, res) {
         const isPasswordValid = await user.comparePassword(password);
 
         if (!isPasswordValid) {
-            return res.status(400).send({ message: "wrong password or UserName" });
+            return res.status(400).send({ message: "Wrong password" });
         }
 
         let token = jwt.sign({ userId: user?._id }, secretKey, { expiresIn: '1h' });
@@ -67,6 +68,11 @@ async function deleteAccount(req, res) {
             return res.status(400).json({ message: "Invalid token or user ID missing" });
         }
 
+        // Delete user tasks first
+        const deletedTasks = await ToDo.deleteMany({ userId });
+        console.log("Tasks deleted:", deletedTasks.deletedCount);
+
+        // Delete user accoun
         const user = await User.findByIdAndDelete(userId);
         console.log("User deleted:", user);
 
